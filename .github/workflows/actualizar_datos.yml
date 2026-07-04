@@ -1,0 +1,40 @@
+name: Actualizar datos de mercado
+
+# ─────────────────────────────────────────────────────────────
+# Corre automáticamente de lunes a viernes a las 22:30 UTC
+# (19:30 hora Argentina), después del cierre de Wall Street.
+# También se puede ejecutar a mano desde la pestaña "Actions"
+# del repositorio con el botón "Run workflow".
+# ─────────────────────────────────────────────────────────────
+on:
+  schedule:
+    - cron: '30 22 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar actualizar_datos.py
+        run: python actualizar_datos.py
+
+      - name: Commitear datos_reales.json actualizado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add datos_reales.json
+          git diff --staged --quiet || (git commit -m "Datos actualizados $(date -u +'%Y-%m-%d')" && git push)
